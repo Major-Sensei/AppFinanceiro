@@ -14,6 +14,7 @@
             --accent: #3b82f6;
             --success: #22c55e;
             --danger: #ef4444;
+            --warning: #f59e0b;
             --border: #334155;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -22,46 +23,48 @@
         .container { padding: 15px; max-width: 600px; margin: 0 auto; }
         .card { background: var(--card-bg); border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border); }
         .balance-box { text-align: center; padding: 20px; }
-        .balance-box h1 { font-size: 2rem; margin: 5px 0; }
-        .sub-values { display: flex; justify-content: space-around; margin-top: 15px; font-size: 0.9rem; }
+        .balance-box h1 { font-size: 2.2rem; margin: 5px 0; }
+        .sub-values { display: flex; justify-content: space-around; margin-top: 15px; font-size: 0.95rem; }
         .income { color: var(--success); }
         .expense { color: var(--danger); }
-        .month-selector { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: var(--card-bg); padding: 10px 15px; border-radius: 8px; border: 1px solid var(--border); }
+        .month-selector { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: var(--card-bg); padding: 12px 15px; border-radius: 8px; border: 1px solid var(--border); }
         .month-selector button { background: none; border: none; color: var(--text-color); font-size: 1.2rem; cursor: pointer; }
-        .btn { background: var(--accent); color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 5px; }
+        .btn { background: var(--accent); color: white; border: none; padding: 12px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 5px; font-size: 1rem; }
         .btn-secondary { background: #475569; }
-        .transaction-list { list-style: none; }
-        .transaction-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+        .btn-quick { background: #334155; border: 1px solid var(--border); color: var(--text-color); padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; display: inline-block; margin: 4px; }
+        .transaction-list { list-style: none; max-height: 250px; overflow-y: auto; }
+        .transaction-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
         .transaction-item:last-child { border-bottom: none; }
-        .floating-btn { position: fixed; bottom: 20px; right: 20px; background: var(--accent); color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; box-shadow: 0 4px 10px rgba(0,0,0,0.3); cursor: pointer; border: none; z-index: 100; }
+        .floating-btn { position: fixed; bottom: 20px; right: 20px; background: var(--accent); color: white; width: 65px; height: 65px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); cursor: pointer; border: none; z-index: 100; }
         .automation-section { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        input, select { width: 100%; padding: 10px; margin: 5px 0 15px 0; background: var(--bg-color); border: 1px solid var(--border); color: var(--text-color); border-radius: 8px; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
-        .modal-content { background: var(--card-bg); padding: 20px; border-radius: 12px; width: 100%; max-width: 400px; border: 1px solid var(--border); }
+        input, select, textarea { width: 100%; padding: 12px; margin: 5px 0 15px 0; background: var(--bg-color); border: 1px solid var(--border); color: var(--text-color); border-radius: 8px; font-size: 1rem; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
+        .modal-content { background: var(--card-bg); padding: 20px; border-radius: 12px; width: 100%; max-width: 400px; border: 1px solid var(--border); max-height: 90vh; overflow-y: auto; }
+        .highlight-box { background: rgba(59, 130, 246, 0.1); border-left: 4px solid var(--accent); padding: 10px 12px; border-radius: 0 8px 8px 0; font-size: 0.9rem; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
     <header>
         <h2>💎 AppFinanceiro</h2>
-        <span id="streak-badge">🔥 0 dias</span>
+        <span id="streak-badge" style="background: rgba(245, 158, 11, 0.2); color: var(--warning); padding: 5px 10px; border-radius: 20px; font-size: 0.85rem; font-weight: bold;">🔥 0 dias</span>
     </header>
 
     <div class="container">
         <!-- Navegação por Mês -->
         <div class="month-selector">
             <button onclick="mudarMes(-1)">◀</button>
-            <span id="current-month-label" style="font-weight: bold;">Mês Atual</span>
+            <span id="current-month-label" style="font-weight: bold; font-size: 1.1rem;">Mês Atual</span>
             <button onclick="mudarMes(1)">▶</button>
         </div>
 
-        <!-- Automação: Bancos & Arquivos -->
+        <!-- Automação: Bancos & Notificações (GPay / CSV) -->
         <div class="automation-section">
-            <button class="btn btn-secondary" onclick="abrirModalExtrato()">📄 Importar OFX/CSV</button>
-            <button class="btn btn-secondary" onclick="abrirModalNotificacao()">🔔 Ler SMS/Alerta</button>
+            <button class="btn btn-secondary" style="font-size: 0.9rem; padding: 10px;" onclick="abrirModalExtrato()">📄 Importar CSV</button>
+            <button class="btn btn-secondary" style="font-size: 0.9rem; padding: 10px;" onclick="abrirModalNotificacao()">🔔 Colar GPay/SMS</button>
         </div>
 
-        <!-- Saldo e Visão Geral -->
+        <!-- Saldo Principal -->
         <div class="card balance-box">
             <p style="color: var(--text-muted);">Saldo do Mês</p>
             <h1 id="total-balance">R$ 0,00</h1>
@@ -71,12 +74,41 @@
             </div>
         </div>
 
-        <!-- Orçamento -->
+        <!-- Orçamento e Metas -->
         <div class="card">
-            <h3>Orçamento Mensal</h3>
-            <p id="budget-text" style="font-size: 0.9rem; margin: 5px 0;">Gastou R$ 0 de R$ 2.000</p>
-            <div style="background: var(--border); height: 10px; border-radius: 5px; overflow: hidden;">
-                <div id="budget-bar" style="background: var(--accent); width: 0%; height: 100%;"></div>
+            <h3>Orçamento & Metas</h3>
+            <p id="budget-text" style="font-size: 0.9rem; margin: 8px 0 4px 0;">Gastou R$ 0 de R$ 2.000</p>
+            <div style="background: var(--border); height: 10px; border-radius: 5px; overflow: hidden; margin-bottom: 12px;">
+                <div id="budget-bar" style="background: var(--accent); width: 0%; height: 100%; transition: width 0.3s;"></div>
+            </div>
+            <p id="meta-economia-text" style="font-size: 0.85rem; color: var(--text-muted);">🎯 Meta de economia: R$ 500 (0%)</p>
+        </div>
+
+        <!-- Insights e Maior Gasto -->
+        <div class="card">
+            <div id="maior-gasto-box" class="highlight-box">
+                💸 <strong>Maior gasto:</strong> Nenhum registrado este mês.
+            </div>
+            <div id="comparativo-box" class="highlight-box" style="border-left-color: var(--success); background: rgba(34, 197, 94, 0.1);">
+                📊 <strong>Comparativo:</strong> Dados insuficientes do mês passado.
+            </div>
+        </div>
+
+        <!-- Gráfico de Pizza por Categoria -->
+        <div class="card">
+            <h3>Gastos por Categoria</h3>
+            <div style="width: 220px; height: 220px; margin: 10px auto;">
+                <canvas id="categoryChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Templates / Quick Add Favoritos -->
+        <div class="card">
+            <h3>Favoritos (1 Toque)</h3>
+            <div id="templates-list" style="margin-top: 8px;">
+                <button class="btn-quick" onclick="usarTemplate('Almoço', 25, '🍔 Alimentação')">🍔 Almoço R$ 25</button>
+                <button class="btn-quick" onclick="usarTemplate('Uber', 20, '🚌 Transporte')">🚗 Uber R$ 20</button>
+                <button class="btn-quick" onclick="usarTemplate('Café', 7, '🍔 Alimentação')">☕ Café R$ 7</button>
             </div>
         </div>
 
@@ -84,7 +116,7 @@
         <div class="card">
             <h3>Transações Recentes</h3>
             <ul id="transaction-list" class="transaction-list">
-                <p style="color: var(--text-muted); text-align: center; padding: 10px;">Nenhuma transação registrada.</p>
+                <p style="color: var(--text-muted); text-align: center; padding: 15px;">Nenhuma transação registrada.</p>
             </ul>
         </div>
     </div>
@@ -101,6 +133,12 @@
                 <option value="expense">Despesa</option>
                 <option value="income">Receita</option>
             </select>
+            <label>Conta / Carteira</label>
+            <select id="conta-transacao">
+                <option value="Carteira Virtual (GPay)">💳 Carteira Virtual (GPay)</option>
+                <option value="Dinheiro">💵 Dinheiro</option>
+                <option value="Conta Bancária">🏦 Conta Bancária</option>
+            </select>
             <label>Descrição</label>
             <input type="text" id="desc-transacao" placeholder="Ex: Mercado, Aluguel...">
             <label>Valor (R$)</label>
@@ -111,16 +149,17 @@
                 <option value="🚌 Transporte">🚌 Transporte</option>
                 <option value="💡 Contas">💡 Contas</option>
                 <option value="🎉 Lazer">🎉 Lazer</option>
+                <option value="🛍️ Compras">🛍️ Compras</option>
             </select>
-            <button class="btn" onclick="salvarTransacao()">Salvar</button>
+            <button class="btn" onclick="salvarTransacao()">Salvar Transação</button>
             <button class="btn btn-secondary" onclick="fecharModais()" style="margin-top: 10px;">Cancelar</button>
         </div>
     </div>
 
-    <!-- Modal Importar Extrato -->
+    <!-- Modal Importar CSV -->
     <div id="modal-extrato" class="modal">
         <div class="modal-content">
-            <h3>Importar Extrato Bancário</h3>
+            <h3>Importar Extrato CSV</h3>
             <p style="font-size: 0.85rem; color: var(--text-muted); margin: 10px 0;">Envie um arquivo .csv exportado do seu banco:</p>
             <input type="file" id="file-input" accept=".csv, .txt">
             <button class="btn" onclick="processarCSV()">Processar Arquivo</button>
@@ -128,12 +167,12 @@
         </div>
     </div>
 
-    <!-- Modal Leitura de Notificação/SMS -->
+    <!-- Modal Colar Alerta / GPay / SMS -->
     <div id="modal-notificacao" class="modal">
         <div class="modal-content">
-            <h3>Colar Alerta do Banco / SMS</h3>
-            <p style="font-size: 0.85rem; color: var(--text-muted); margin: 10px 0;">Cole o texto recebido na notificação do seu banco (ex: "Compra aprovada de R$ 35,00 em Uber"):</p>
-            <textarea id="sms-text" rows="4" placeholder="Cole aqui a mensagem..." style="width: 100%; padding: 10px; background: var(--bg-color); border: 1px solid var(--border); color: var(--text-color); border-radius: 8px;"></textarea>
+            <h3>Colar Alerta do GPay / SMS</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin: 10px 0;">Cole a notificação do Google Pay ou banco (ex: "Compra aprovada de R$ 35,00 em Uber"):</p>
+            <textarea id="sms-text" rows="4" placeholder="Cole aqui a notificação..." style="width: 100%; padding: 12px; background: var(--bg-color); border: 1px solid var(--border); color: var(--text-color); border-radius: 8px;"></textarea>
             <button class="btn" onclick="interpretarSMS()">Extrair e Salvar Gasto</button>
             <button class="btn btn-secondary" onclick="fecharModais()" style="margin-top: 10px;">Cancelar</button>
         </div>
@@ -142,11 +181,14 @@
     <script>
         let transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
         let dataAtual = new Date();
+        let chartInstance = null;
 
         function atualizarApp() {
             localStorage.setItem('transacoes', JSON.stringify(transacoes));
             
-            let mesAnoStr = `${dataAtual.getFullYear()}-${String(dataAtual.getMonth() + 1).padStart(2, '0')}`;
+            let ano = dataAtual.getFullYear();
+            let mes = dataAtual.getMonth();
+            let mesAnoStr = `${ano}-${String(mes + 1).padStart(2, '0')}`;
             document.getElementById('current-month-label').innerText = dataAtual.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
 
             let filtradas = transacoes.filter(t => t.data.startsWith(mesAnoStr));
@@ -159,25 +201,111 @@
             document.getElementById('total-income').innerText = `R$ ${receitas.toFixed(2)}`;
             document.getElementById('total-expense').innerText = `R$ ${despesas.toFixed(2)}`;
 
-            // Orçamento
+            // Orçamento e Meta
             let limiteOrcamento = 2000;
-            let percentual = Math.min((despesas / limiteOrcamento) * 100, 100);
+            let metaEconomia = 500;
+            let percentualOrcamento = Math.min((despesas / limiteOrcamento) * 100, 100);
             document.getElementById('budget-text').innerText = `Gastou R$ ${despesas.toFixed(2)} de R$ ${limiteOrcamento}`;
-            document.getElementById('budget-bar').style.width = `${percentual}%`;
+            document.getElementById('budget-bar').style.width = `${percentualOrcamento}%`;
+            
+            let economiaReal = Math.max(0, receitas - despesas);
+            let percMeta = Math.min((economiaReal / metaEconomia) * 100, 100);
+            document.getElementById('meta-economia-text').innerText = `🎯 Meta de economia: R$ ${metaEconomia} (${percMeta.toFixed(0)}% alcançada)`;
 
-            // Lista
+            // Maior gasto do mês
+            let despesasFiltradas = filtradas.filter(t => t.tipo === 'expense');
+            if (despesasFiltradas.length > 0) {
+                let maior = despesasFiltradas.reduce((max, t) => t.valor > max.valor ? t : max, despesasFiltradas[0]);
+                document.getElementById('maior-gasto-box').innerHTML = `💸 <strong>Maior gasto:</strong> ${maior.descricao} (R$ ${maior.valor.toFixed(2)})`;
+            } else {
+                document.getElementById('maior-gasto-box').innerHTML = `💸 <strong>Maior gasto:</strong> Nenhum registrado este mês.`;
+            }
+
+            // Comparativo mês passado
+            let mesPassadoDate = new Date(ano, mes - 1, 1);
+            let mesPassadoStr = `${mesPassadoDate.getFullYear()}-${String(mesPassadoDate.getMonth() + 1).padStart(2, '0')}`;
+            let despesasPassado = transacoes.filter(t => t.data.startsWith(mesPassadoStr) && t.tipo === 'expense').reduce((acc, t) => acc + t.valor, 0);
+            
+            if (despesasPassado > 0) {
+                let diff = ((despesas - despesasPassado) / despesasPassado) * 100;
+                let sinal = diff >= 0 ? '+' : '';
+                document.getElementById('comparativo-box').innerHTML = `📊 <strong>Comparativo:</strong> Você está gastando ${sinal}${diff.toFixed(1)}% vs mês passado.`;
+            } else {
+                document.getElementById('comparativo-box').innerHTML = `📊 <strong>Comparativo:</strong> Sem dados do mês anterior.`;
+            }
+
+            // Streak (Dias seguidos)
+            atualizarStreak();
+
+            // Lista de transações
             let listaEl = document.getElementById('transaction-list');
             listaEl.innerHTML = '';
             if (filtradas.length === 0) {
-                listaEl.innerHTML = `<p style="color: var(--text-muted); text-align: center; padding: 10px;">Nenhuma transação neste mês.</p>`;
+                listaEl.innerHTML = `<p style="color: var(--text-muted); text-align: center; padding: 15px;">Nenhuma transação neste mês.</p>`;
             } else {
-                filtradas.reverse().forEach(t => {
+                [...filtradas].reverse().forEach(t => {
                     let li = document.createElement('li');
                     li.className = 'transaction-item';
-                    li.innerHTML = `<div><strong>${t.descricao}</strong><br><small style="color:var(--text-muted);">${t.categoria} • ${t.data}</small></div><span class="${t.tipo === 'income' ? 'income' : 'expense'}">${t.tipo === 'income' ? '+' : '-'} R$ ${t.valor.toFixed(2)}</span>`;
+                    li.innerHTML = `<div><strong>${t.descricao}</strong><br><small style="color:var(--text-muted);">${t.categoria} • ${t.conta || 'GPay'} • ${t.data}</small></div><span class="${t.tipo === 'income' ? 'income' : 'expense'}">${t.tipo === 'income' ? '+' : '-'} R$ ${t.valor.toFixed(2)}</span>`;
                     listaEl.appendChild(li);
                 });
             }
+
+            atualizarGraficoPizza(filtradas);
+        }
+
+        function atualizarStreak() {
+            let diasUnicos = [...new Set(transacoes.map(t => t.data))].sort();
+            let streak = 0;
+            let hojeStr = new Date().toISOString().split('T')[0];
+            
+            if (diasUnicos.includes(hojeStr)) {
+                streak = 1;
+                let d = new Date();
+                for (let i = 1; i <= 30; i++) {
+                    d.setDate(d.getDate() - 1);
+                    let dStr = d.toISOString().split('T')[0];
+                    if (diasUnicos.includes(dStr)) streak++;
+                    else break;
+                }
+            }
+            document.getElementById('streak-badge').innerText = `🔥 ${streak} ${streak === 1 ? 'dia seg.' : 'dias seg.'}`;
+        }
+
+        function atualizarGraficoPizza(filtradas) {
+            let ctx = document.getElementById('categoryChart').getContext('2d');
+            let categoriasTotais = {};
+
+            filtradas.filter(t => t.tipo === 'expense').forEach(t => {
+                categoriasTotais[t.categoria] = (categoriasTotais[t.categoria] || 0) + t.valor;
+            });
+
+            let labels = Object.keys(categoriasTotais);
+            let valores = Object.values(categoriasTotais);
+
+            if (chartInstance) chartInstance.destroy();
+
+            if (labels.length === 0) {
+                labels = ['Sem gastos'];
+                valores = [1];
+            }
+
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: valores,
+                        backgroundColor: ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { color: '#f8fafc', boxWidth: 12, font: { size: 11 } } } }
+                }
+            });
         }
 
         function mudarMes(direcao) {
@@ -192,6 +320,7 @@
 
         function salvarTransacao() {
             let tipo = document.getElementById('tipo-transacao').value;
+            let conta = document.getElementById('conta-transacao').value;
             let descricao = document.getElementById('desc-transacao').value;
             let valor = parseFloat(document.getElementById('valor-transacao').value);
             let categoria = document.getElementById('cat-transacao').value;
@@ -202,7 +331,7 @@
             }
 
             let hoje = new Date().toISOString().split('T')[0];
-            transacoes.push({ id: Date.now(), tipo, descricao, valor, categoria, data: hoje });
+            transacoes.push({ id: Date.now(), tipo, conta, descricao, valor, categoria, data: hoje });
             
             fecharModais();
             document.getElementById('desc-transacao').value = '';
@@ -210,12 +339,17 @@
             atualizarApp();
         }
 
-        // Leitor simples de Notificação/SMS colada
+        function usarTemplate(desc, valor, cat) {
+            let hoje = new Date().toISOString().split('T')[0];
+            transacoes.push({ id: Date.now(), tipo: 'expense', conta: 'Carteira Virtual (GPay)', descricao: desc, valor: valor, categoria: cat, data: hoje });
+            atualizarApp();
+            alert(`Template "${desc}" (R$ ${valor.toFixed(2)}) registrado com sucesso!`);
+        }
+
         function interpretarSMS() {
             let texto = document.getElementById('sms-text').value;
-            if (!texto) return alert('Cole o texto da notificação.');
+            if (!texto) return alert('Cole o texto da notificação do GPay.');
 
-            // Tenta encontrar um valor em reais (ex: R$ 45,90 ou 45.90)
             let matchValor = texto.match(/R?\$?\s*([0-9]+[.,][0-9]{2})/);
             if (!matchValor) {
                 alert('Não foi possível identificar o valor monetário no texto.');
@@ -228,19 +362,19 @@
             transacoes.push({
                 id: Date.now(),
                 tipo: 'expense',
-                descricao: 'Notificação Bancária',
+                conta: 'Carteira Virtual (GPay)',
+                descricao: 'Compra via GPay / Notificação',
                 valor: valor,
-                categoria: '💳 Cartão / Banco',
+                categoria: '🛍️ Compras',
                 data: hoje
             });
 
             fecharModais();
             document.getElementById('sms-text').value = '';
             atualizarApp();
-            alert(`Gasto de R$ ${valor.toFixed(2)} importado com sucesso via notificação!`);
+            alert(`Gasto de R$ ${valor.toFixed(2)} importado do GPay com sucesso!`);
         }
 
-        // Leitor simples de CSV do banco
         function processarCSV() {
             let fileInput = document.getElementById('file-input');
             if (fileInput.files.length === 0) return alert('Selecione um arquivo CSV.');
@@ -259,10 +393,11 @@
                         let valStr = partes[1].replace(/"/g, '').replace('R$', '').trim().replace(',', '.');
                         let val = parseFloat(valStr);
 
-                        if (!isNaN(val) && val > 0 && desc.length > 2) {
+                        if (!isNaN(val) && val !== 0 && desc.length > 1) {
                             transacoes.push({
                                 id: Date.now() + Math.random(),
-                                tipo: val < 0 ? 'expense' : 'expense',
+                                tipo: val < 0 ? 'expense' : 'income',
+                                conta: 'Conta Bancária',
                                 descricao: desc,
                                 valor: Math.abs(val),
                                 categoria: '📄 Extrato Bancário',
@@ -275,7 +410,7 @@
 
                 fecharModais();
                 atualizarApp();
-                alert(`${count} transações importadas do extrato com sucesso!`);
+                alert(`${count} transações importadas com sucesso!`);
             };
             reader.readAsText(file);
         }
