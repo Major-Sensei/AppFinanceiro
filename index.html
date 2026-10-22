@@ -58,10 +58,10 @@
             <button onclick="mudarMes(1)">▶</button>
         </div>
 
-        <!-- Automação: Bancos & Notificações (GPay / CSV) -->
+        <!-- Atalhos de Automação (GPay e CSV) -->
         <div class="automation-section">
-            <button class="btn btn-secondary" style="font-size: 0.9rem; padding: 10px;" onclick="abrirModalExtrato()">📄 Importar CSV</button>
-            <button class="btn btn-secondary" style="font-size: 0.9rem; padding: 10px;" onclick="abrirModalNotificacao()">🔔 Colar GPay/SMS</button>
+            <button class="btn btn-secondary" style="font-size: 0.85rem; padding: 10px;" onclick="abrirModalExtrato()">📄 Importar CSV</button>
+            <button class="btn btn-secondary" style="font-size: 0.85rem; padding: 10px;" onclick="abrirModalNotificacao()">🔔 Colar GPay/SMS</button>
         </div>
 
         <!-- Saldo Principal -->
@@ -135,7 +135,7 @@
             </select>
             <label>Conta / Carteira</label>
             <select id="conta-transacao">
-                <option value="Carteira Virtual (GPay)">💳 Carteira Virtual (GPay)</option>
+                <option value="GPay / Virtual">💳 GPay / Virtual</option>
                 <option value="Dinheiro">💵 Dinheiro</option>
                 <option value="Conta Bancária">🏦 Conta Bancária</option>
             </select>
@@ -160,18 +160,18 @@
     <div id="modal-extrato" class="modal">
         <div class="modal-content">
             <h3>Importar Extrato CSV</h3>
-            <p style="font-size: 0.85rem; color: var(--text-muted); margin: 10px 0;">Envie um arquivo .csv exportado do seu banco:</p>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin: 10px 0;">Envie um arquivo .csv do seu banco:</p>
             <input type="file" id="file-input" accept=".csv, .txt">
             <button class="btn" onclick="processarCSV()">Processar Arquivo</button>
             <button class="btn btn-secondary" onclick="fecharModais()" style="margin-top: 10px;">Fechar</button>
         </div>
     </div>
 
-    <!-- Modal Colar Alerta / GPay / SMS -->
+    <!-- Modal Colar Alerta GPay / SMS -->
     <div id="modal-notificacao" class="modal">
         <div class="modal-content">
-            <h3>Colar Alerta do GPay / SMS</h3>
-            <p style="font-size: 0.85rem; color: var(--text-muted); margin: 10px 0;">Cole a notificação do Google Pay ou banco (ex: "Compra aprovada de R$ 35,00 em Uber"):</p>
+            <h3>Colar Alerta GPay / SMS</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin: 10px 0;">Cole a notificação do Google Pay ou banco:</p>
             <textarea id="sms-text" rows="4" placeholder="Cole aqui a notificação..." style="width: 100%; padding: 12px; background: var(--bg-color); border: 1px solid var(--border); color: var(--text-color); border-radius: 8px;"></textarea>
             <button class="btn" onclick="interpretarSMS()">Extrair e Salvar Gasto</button>
             <button class="btn btn-secondary" onclick="fecharModais()" style="margin-top: 10px;">Cancelar</button>
@@ -212,7 +212,7 @@
             let percMeta = Math.min((economiaReal / metaEconomia) * 100, 100);
             document.getElementById('meta-economia-text').innerText = `🎯 Meta de economia: R$ ${metaEconomia} (${percMeta.toFixed(0)}% alcançada)`;
 
-            // Maior gasto do mês
+            // Maior gasto
             let despesasFiltradas = filtradas.filter(t => t.tipo === 'expense');
             if (despesasFiltradas.length > 0) {
                 let maior = despesasFiltradas.reduce((max, t) => t.valor > max.valor ? t : max, despesasFiltradas[0]);
@@ -221,7 +221,7 @@
                 document.getElementById('maior-gasto-box').innerHTML = `💸 <strong>Maior gasto:</strong> Nenhum registrado este mês.`;
             }
 
-            // Comparativo mês passado
+            // Comparativo
             let mesPassadoDate = new Date(ano, mes - 1, 1);
             let mesPassadoStr = `${mesPassadoDate.getFullYear()}-${String(mesPassadoDate.getMonth() + 1).padStart(2, '0')}`;
             let despesasPassado = transacoes.filter(t => t.data.startsWith(mesPassadoStr) && t.tipo === 'expense').reduce((acc, t) => acc + t.valor, 0);
@@ -234,10 +234,9 @@
                 document.getElementById('comparativo-box').innerHTML = `📊 <strong>Comparativo:</strong> Sem dados do mês anterior.`;
             }
 
-            // Streak (Dias seguidos)
             atualizarStreak();
 
-            // Lista de transações
+            // Lista
             let listaEl = document.getElementById('transaction-list');
             listaEl.innerHTML = '';
             if (filtradas.length === 0) {
@@ -341,9 +340,8 @@
 
         function usarTemplate(desc, valor, cat) {
             let hoje = new Date().toISOString().split('T')[0];
-            transacoes.push({ id: Date.now(), tipo: 'expense', conta: 'Carteira Virtual (GPay)', descricao: desc, valor: valor, categoria: cat, data: hoje });
+            transacoes.push({ id: Date.now(), tipo: 'expense', conta: 'GPay / Virtual', descricao: desc, valor: valor, categoria: cat, data: hoje });
             atualizarApp();
-            alert(`Template "${desc}" (R$ ${valor.toFixed(2)}) registrado com sucesso!`);
         }
 
         function interpretarSMS() {
@@ -362,8 +360,8 @@
             transacoes.push({
                 id: Date.now(),
                 tipo: 'expense',
-                conta: 'Carteira Virtual (GPay)',
-                descricao: 'Compra via GPay / Notificação',
+                conta: 'GPay / Virtual',
+                descricao: 'Gasto via GPay',
                 valor: valor,
                 categoria: '🛍️ Compras',
                 data: hoje
@@ -372,7 +370,7 @@
             fecharModais();
             document.getElementById('sms-text').value = '';
             atualizarApp();
-            alert(`Gasto de R$ ${valor.toFixed(2)} importado do GPay com sucesso!`);
+            alert(`Gasto de R$ ${valor.toFixed(2)} importado com sucesso!`);
         }
 
         function processarCSV() {
