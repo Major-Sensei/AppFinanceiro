@@ -1,0 +1,16 @@
+{
+  "background_color": "#000000",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "Coema Economia",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "Coecono",
+  "start_url": "https://major-sensei.github.io/AppFinanceiro/",
+  "theme_color": "#000000",
+  "categories": [
+    "education"
+  ],
+  "id": "Coema Economia",
+  "description": "meu app pessoal financeiro"
+}
