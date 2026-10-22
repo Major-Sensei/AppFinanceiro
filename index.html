@@ -1,419 +1,898 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="h-full">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AppFinanceiro - Controle Pessoal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AppFinanceiro - Mobile App</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#6366f1',
+                        darkBg: '#0f172a',
+                        cardDark: '#1e293b'
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js for analytics -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --text-color: #f8fafc;
-            --text-muted: #94a3b8;
-            --accent: #3b82f6;
-            --success: #22c55e;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --border: #334155;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-color); padding-bottom: 90px; }
-        header { background: var(--card-bg); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
-        .container { padding: 15px; max-width: 600px; margin: 0 auto; }
-        .card { background: var(--card-bg); border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border); }
-        .balance-box { text-align: center; padding: 20px; }
-        .balance-box h1 { font-size: 2.2rem; margin: 5px 0; }
-        .sub-values { display: flex; justify-content: space-around; margin-top: 15px; font-size: 0.95rem; }
-        .income { color: var(--success); }
-        .expense { color: var(--danger); }
-        .month-selector { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: var(--card-bg); padding: 12px 15px; border-radius: 8px; border: 1px solid var(--border); }
-        .month-selector button { background: none; border: none; color: var(--text-color); font-size: 1.2rem; cursor: pointer; }
-        .btn { background: var(--accent); color: white; border: none; padding: 12px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 5px; font-size: 1rem; }
-        .btn-secondary { background: #475569; }
-        .btn-quick { background: #334155; border: 1px solid var(--border); color: var(--text-color); padding: 8px 12px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; display: inline-block; margin: 4px; }
-        .transaction-list { list-style: none; max-height: 250px; overflow-y: auto; }
-        .transaction-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
-        .transaction-item:last-child { border-bottom: none; }
-        .floating-btn { position: fixed; bottom: 20px; right: 20px; background: var(--accent); color: white; width: 65px; height: 65px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); cursor: pointer; border: none; z-index: 100; }
-        .automation-section { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        input, select, textarea { width: 100%; padding: 12px; margin: 5px 0 15px 0; background: var(--bg-color); border: 1px solid var(--border); color: var(--text-color); border-radius: 8px; font-size: 1rem; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
-        .modal-content { background: var(--card-bg); padding: 20px; border-radius: 12px; width: 100%; max-width: 400px; border: 1px solid var(--border); max-height: 90vh; overflow-y: auto; }
-        .highlight-box { background: rgba(59, 130, 246, 0.1); border-left: 4px solid var(--accent); padding: 10px 12px; border-radius: 0 8px 8px 0; font-size: 0.9rem; margin-bottom: 10px; }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+        body { -webkit-tap-highlight-color: transparent; user-select: none; }
+        input, select, textarea { user-select: text; }
     </style>
 </head>
-<body>
+<body class="h-full bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-sans antialiased transition-colors duration-200 flex justify-center">
 
-    <header>
-        <h2>💎 AppFinanceiro</h2>
-        <span id="streak-badge" style="background: rgba(245, 158, 11, 0.2); color: var(--warning); padding: 5px 10px; border-radius: 20px; font-size: 0.85rem; font-weight: bold;">🔥 0 dias</span>
-    </header>
-
-    <div class="container">
-        <!-- Navegação por Mês -->
-        <div class="month-selector">
-            <button onclick="mudarMes(-1)">◀</button>
-            <span id="current-month-label" style="font-weight: bold; font-size: 1.1rem;">Mês Atual</span>
-            <button onclick="mudarMes(1)">▶</button>
-        </div>
-
-        <!-- Atalhos de Automação (GPay e CSV) -->
-        <div class="automation-section">
-            <button class="btn btn-secondary" style="font-size: 0.85rem; padding: 10px;" onclick="abrirModalExtrato()">📄 Importar CSV</button>
-            <button class="btn btn-secondary" style="font-size: 0.85rem; padding: 10px;" onclick="abrirModalNotificacao()">🔔 Colar GPay/SMS</button>
-        </div>
-
-        <!-- Saldo Principal -->
-        <div class="card balance-box">
-            <p style="color: var(--text-muted);">Saldo do Mês</p>
-            <h1 id="total-balance">R$ 0,00</h1>
-            <div class="sub-values">
-                <div>Receitas: <span id="total-income" class="income">R$ 0,00</span></div>
-                <div>Despesas: <span id="total-expense" class="expense">R$ 0,00</span></div>
+    <!-- Mobile Wrapper Container -->
+    <div id="app-container" class="w-full max-w-md h-full max-h-[100vh] sm:max-h-[850px] sm:rounded-3xl sm:shadow-2xl flex flex-col bg-white dark:bg-slate-900 overflow-hidden relative border border-slate-200 dark:border-slate-800">
+        
+        <!-- Top Header -->
+        <header class="px-5 pt-4 pb-3 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur sticky top-0 z-30">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-2xl bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-lg shadow-inner">
+                    💰
+                </div>
+                <div>
+                    <h1 class="font-bold text-base leading-tight tracking-tight">AppFinanceiro</h1>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                        <span id="streak-indicator" class="inline-flex items-center text-amber-500 font-semibold">🔥 0 dias</span>
+                    </p>
+                </div>
             </div>
+            
+            <div class="flex items-center space-x-2">
+                <button onclick="toggleDarkMode()" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:scale-105 active:scale-95 transition">
+                    <i data-lucide="moon" class="w-5 h-5 dark:hidden"></i>
+                    <i data-lucide="sun" class="w-5 h-5 hidden dark:block"></i>
+                </button>
+                <button onclick="openSettingsModal()" class="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:scale-105 active:scale-95 transition">
+                    <i data-lucide="settings" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main id="main-content" class="flex-1 overflow-y-auto pb-24">
+            <!-- Dynamic Views -->
+        </main>
+
+        <!-- Floating Action Button (+) -->
+        <div class="absolute bottom-20 right-5 z-40">
+            <button onclick="openTransactionModal()" class="w-14 h-14 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full flex items-center justify-center shadow-lg shadow-indigo-600/40 hover:scale-110 active:scale-95 transition-all duration-200">
+                <i data-lucide="plus" class="w-7 h-7 stroke-[2.5]"></i>
+            </button>
         </div>
 
-        <!-- Orçamento e Metas -->
-        <div class="card">
-            <h3>Orçamento & Metas</h3>
-            <p id="budget-text" style="font-size: 0.9rem; margin: 8px 0 4px 0;">Gastou R$ 0 de R$ 2.000</p>
-            <div style="background: var(--border); height: 10px; border-radius: 5px; overflow: hidden; margin-bottom: 12px;">
-                <div id="budget-bar" style="background: var(--accent); width: 0%; height: 100%; transition: width 0.3s;"></div>
-            </div>
-            <p id="meta-economia-text" style="font-size: 0.85rem; color: var(--text-muted);">🎯 Meta de economia: R$ 500 (0%)</p>
-        </div>
+        <!-- Bottom Navigation Bar -->
+        <nav class="absolute bottom-0 left-0 right-0 h-16 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-slate-100 dark:border-slate-800 flex items-center justify-around px-2 z-30">
+            <button onclick="switchTab('home')" class="nav-btn flex flex-col items-center justify-center w-16 py-1 text-indigo-600 dark:text-indigo-400 transition" data-tab="home">
+                <i data-lucide="home" class="w-5 h-5"></i>
+                <span class="text-[10px] font-medium mt-1">Início</span>
+            </button>
+            <button onclick="switchTab('transactions')" class="nav-btn flex flex-col items-center justify-center w-16 py-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition" data-tab="transactions">
+                <i data-lucide="receipt" class="w-5 h-5"></i>
+                <span class="text-[10px] font-medium mt-1">Extrato</span>
+            </button>
+            <button onclick="switchTab('analytics')" class="nav-btn flex flex-col items-center justify-center w-16 py-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition" data-tab="analytics">
+                <i data-lucide="pie-chart" class="w-5 h-5"></i>
+                <span class="text-[10px] font-medium mt-1">Análise</span>
+            </button>
+            <button onclick="switchTab('wallets')" class="nav-btn flex flex-col items-center justify-center w-16 py-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition" data-tab="wallets">
+                <i data-lucide="wallet" class="w-5 h-5"></i>
+                <span class="text-[10px] font-medium mt-1">Carteiras</span>
+            </button>
+        </nav>
+    </div>
 
-        <!-- Insights e Maior Gasto -->
-        <div class="card">
-            <div id="maior-gasto-box" class="highlight-box">
-                💸 <strong>Maior gasto:</strong> Nenhum registrado este mês.
+    <!-- Modal: Adicionar Transação -->
+    <div id="transaction-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center sm:p-4 hidden transition-opacity">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-md sm:rounded-3xl rounded-t-3xl max-h-[92vh] flex flex-col overflow-hidden shadow-2xl">
+            
+            <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <span id="modal-title-icon" class="text-xl">💸</span>
+                    <h3 id="modal-title" class="font-bold text-lg">Nova Transação</h3>
+                </div>
+                <button onclick="closeTransactionModal()" class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
             </div>
-            <div id="comparativo-box" class="highlight-box" style="border-left-color: var(--success); background: rgba(34, 197, 94, 0.1);">
-                📊 <strong>Comparativo:</strong> Dados insuficientes do mês passado.
-            </div>
-        </div>
 
-        <!-- Gráfico de Pizza por Categoria -->
-        <div class="card">
-            <h3>Gastos por Categoria</h3>
-            <div style="width: 220px; height: 220px; margin: 10px auto;">
-                <canvas id="categoryChart"></canvas>
-            </div>
-        </div>
+            <div class="flex-1 overflow-y-auto p-5 space-y-5">
+                
+                <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl">
+                    <button type="button" id="type-expense" onclick="setTransactionType('despesa')" class="py-2.5 rounded-xl font-semibold text-sm transition shadow-sm bg-white dark:bg-slate-700 text-rose-600 dark:text-rose-400">Despesa</button>
+                    <button type="button" id="type-income" onclick="setTransactionType('receita')" class="py-2.5 rounded-xl font-semibold text-sm transition text-slate-500 dark:text-slate-400">Receita</button>
+                </div>
 
-        <!-- Templates / Quick Add Favoritos -->
-        <div class="card">
-            <h3>Favoritos (1 Toque)</h3>
-            <div id="templates-list" style="margin-top: 8px;">
-                <button class="btn-quick" onclick="usarTemplate('Almoço', 25, '🍔 Alimentação')">🍔 Almoço R$ 25</button>
-                <button class="btn-quick" onclick="usarTemplate('Uber', 20, '🚌 Transporte')">🚗 Uber R$ 20</button>
-                <button class="btn-quick" onclick="usarTemplate('Café', 7, '🍔 Alimentação')">☕ Café R$ 7</button>
-            </div>
-        </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Favoritos de 1 toque</label>
+                    <div id="quick-templates-list" class="flex gap-2 overflow-x-auto pb-1"></div>
+                </div>
 
-        <!-- Transações Recentes -->
-        <div class="card">
-            <h3>Transações Recentes</h3>
-            <ul id="transaction-list" class="transaction-list">
-                <p style="color: var(--text-muted); text-align: center; padding: 15px;">Nenhuma transação registrada.</p>
-            </ul>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Valor (R$)</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-3.5 text-2xl font-bold text-slate-400">R$</span>
+                        <input type="number" step="0.01" id="tx-amount" placeholder="0,00" class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl py-3 pl-14 pr-4 text-2xl font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Descrição</label>
+                    <input type="text" id="tx-description" placeholder="Ex: Almoço, Uber..." class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl py-3 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Categoria</label>
+                        <select id="tx-category" onchange="updateSubcategories()" class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl py-3 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Subcategoria</label>
+                        <select id="tx-subcategory" class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl py-3 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Conta / Carteira</label>
+                    <select id="tx-wallet" class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl py-3 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Data</label>
+                        <input type="date" id="tx-date" class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl py-3 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Tag Livre</label>
+                        <input type="text" id="tx-tag" placeholder="ex: viagem" class="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-2xl py-3 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                </div>
+
+                <div class="space-y-3 pt-2 border-t border-slate-100 dark:border-slate-800">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-medium text-slate-600 dark:text-slate-300">Transação Recorrente</span>
+                        <input type="checkbox" id="tx-recurring" class="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500">
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 flex gap-3">
+                <button onclick="closeTransactionModal()" class="flex-1 py-3 bg-slate-100 dark:bg-slate-800 font-semibold rounded-2xl text-sm hover:bg-slate-200 transition">Cancelar</button>
+                <button onclick="saveTransaction()" class="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-2xl text-sm shadow-lg shadow-indigo-600/30 transition">Salvar</button>
+            </div>
         </div>
     </div>
 
-    <!-- Botão Adicionar -->
-    <button class="floating-btn" onclick="abrirModalTransacao()">+</button>
-
-    <!-- Modal Nova Transação -->
-    <div id="modal-transacao" class="modal">
-        <div class="modal-content">
-            <h3>Nova Transação</h3>
-            <label>Tipo</label>
-            <select id="tipo-transacao">
-                <option value="expense">Despesa</option>
-                <option value="income">Receita</option>
-            </select>
-            <label>Conta / Carteira</label>
-            <select id="conta-transacao">
-                <option value="GPay / Virtual">💳 GPay / Virtual</option>
-                <option value="Dinheiro">💵 Dinheiro</option>
-                <option value="Conta Bancária">🏦 Conta Bancária</option>
-            </select>
-            <label>Descrição</label>
-            <input type="text" id="desc-transacao" placeholder="Ex: Mercado, Aluguel...">
-            <label>Valor (R$)</label>
-            <input type="number" id="valor-transacao" step="0.01" placeholder="0.00">
-            <label>Categoria</label>
-            <select id="cat-transacao">
-                <option value="🍔 Alimentação">🍔 Alimentação</option>
-                <option value="🚌 Transporte">🚌 Transporte</option>
-                <option value="💡 Contas">💡 Contas</option>
-                <option value="🎉 Lazer">🎉 Lazer</option>
-                <option value="🛍️ Compras">🛍️ Compras</option>
-            </select>
-            <button class="btn" onclick="salvarTransacao()">Salvar Transação</button>
-            <button class="btn btn-secondary" onclick="fecharModais()" style="margin-top: 10px;">Cancelar</button>
+    <!-- Modal: Importar CSV / Extrato -->
+    <div id="import-csv-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden transition-opacity">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl p-5 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+                <h3 class="font-bold text-lg">📄 Importar Extrato (CSV)</h3>
+                <button onclick="closeImportCsvModal()" class="p-1 text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <p class="text-xs text-slate-400">Selecione um arquivo de extrato bancário em formato .csv para carregar as transações automaticamente.</p>
+            <input type="file" id="file-csv-input" accept=".csv, .txt" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-3 text-xs">
+            <div class="flex gap-3 pt-2">
+                <button onclick="closeImportCsvModal()" class="flex-1 py-2.5 bg-slate-100 dark:bg-slate-800 font-semibold rounded-xl text-xs">Cancelar</button>
+                <button onclick="processarCSV()" class="flex-1 py-2.5 bg-indigo-600 text-white font-semibold rounded-xl text-xs shadow-md">Processar Arquivo</button>
+            </div>
         </div>
     </div>
 
-    <!-- Modal Importar CSV -->
-    <div id="modal-extrato" class="modal">
-        <div class="modal-content">
-            <h3>Importar Extrato CSV</h3>
-            <p style="font-size: 0.85rem; color: var(--text-muted); margin: 10px 0;">Envie um arquivo .csv do seu banco:</p>
-            <input type="file" id="file-input" accept=".csv, .txt">
-            <button class="btn" onclick="processarCSV()">Processar Arquivo</button>
-            <button class="btn btn-secondary" onclick="fecharModais()" style="margin-top: 10px;">Fechar</button>
+    <!-- Modal: Colar Alerta GPay / SMS -->
+    <div id="import-gpay-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden transition-opacity">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl p-5 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+                <h3 class="font-bold text-lg">🔔 Colar Alerta do GPay / SMS</h3>
+                <button onclick="closeImportGpayModal()" class="p-1 text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <p class="text-xs text-slate-400">Cole a notificação recebida do Google Pay ou banco (ex: "Compra aprovada de R$ 45,90 em Uber"):</p>
+            <textarea id="gpay-text-input" rows="4" placeholder="Cole aqui a mensagem da notificação..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-3 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+            <div class="flex gap-3 pt-2">
+                <button onclick="closeImportGpayModal()" class="flex-1 py-2.5 bg-slate-100 dark:bg-slate-800 font-semibold rounded-xl text-xs">Cancelar</button>
+                <button onclick="interpretarGPaySMS()" class="flex-1 py-2.5 bg-indigo-600 text-white font-semibold rounded-xl text-xs shadow-md">Extrair e Salvar Gasto</button>
+            </div>
         </div>
     </div>
 
-    <!-- Modal Colar Alerta GPay / SMS -->
-    <div id="modal-notificacao" class="modal">
-        <div class="modal-content">
-            <h3>Colar Alerta GPay / SMS</h3>
-            <p style="font-size: 0.85rem; color: var(--text-muted); margin: 10px 0;">Cole a notificação do Google Pay ou banco:</p>
-            <textarea id="sms-text" rows="4" placeholder="Cole aqui a notificação..." style="width: 100%; padding: 12px; background: var(--bg-color); border: 1px solid var(--border); color: var(--text-color); border-radius: 8px;"></textarea>
-            <button class="btn" onclick="interpretarSMS()">Extrair e Salvar Gasto</button>
-            <button class="btn btn-secondary" onclick="fecharModais()" style="margin-top: 10px;">Cancelar</button>
+    <!-- Modal: Configurações & Metas -->
+    <div id="settings-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden transition-opacity">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl">
+            <div class="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <h3 class="font-bold text-lg">Configurações e Metas</h3>
+                <button onclick="closeSettingsModal()" class="p-2 text-slate-400 hover:text-slate-600 rounded-xl"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="p-5 flex-1 overflow-y-auto space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Limite de Orçamento Mensal (R$)</label>
+                    <input type="number" id="setting-budget" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl py-3 px-4 text-sm font-semibold">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Meta de Economia Mensal (R$)</label>
+                    <input type="number" id="setting-saving-goal" class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl py-3 px-4 text-sm font-semibold">
+                </div>
+                <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <h4 class="text-sm font-bold text-slate-700 dark:text-slate-200 mb-2">Gerenciar Carteiras</h4>
+                    <div id="settings-wallets-list" class="space-y-2 mb-3"></div>
+                    <div class="flex gap-2">
+                        <input type="text" id="new-wallet-name" placeholder="Nova Conta (ex: Investimentos)" class="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl py-2 px-3 text-xs">
+                        <button onclick="addNewWallet()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-semibold">Adicionar</button>
+                    </div>
+                </div>
+                <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                    <span class="text-xs text-slate-400">Exportar / Importar Dados</span>
+                    <div class="flex gap-2">
+                        <button onclick="exportData()" class="px-3 py-2 bg-slate-100 dark:bg-slate-800 text-xs font-semibold rounded-xl">Exportar JSON</button>
+                        <button onclick="resetData()" class="px-3 py-2 bg-rose-50 dark:bg-rose-950/30 text-rose-600 text-xs font-semibold rounded-xl">Resetar</button>
+                    </div>
+                </div>
+            </div>
+            <div class="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 flex justify-end">
+                <button onclick="saveSettings()" class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-2xl text-sm shadow-md">Salvar Configurações</button>
+            </div>
         </div>
     </div>
 
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-4 py-2.5 rounded-2xl shadow-xl text-xs font-semibold z-50 transition-all duration-300 opacity-0 pointer-events-none translate-y-[-20px]">
+        Notificação
+    </div>
+
+    <!-- JavaScript Application Logic -->
     <script>
-        let transacoes = JSON.parse(localStorage.getItem('transacoes')) || [];
-        let dataAtual = new Date();
-        let chartInstance = null;
+        const DEFAULT_CATEGORIES = {
+            'Alimentação': { icon: '🍔', color: '#f97316', subs: ['Mercado', 'Restaurante', 'Delivery', 'Padaria'] },
+            'Transporte': { icon: '🚌', color: '#0ea5e9', subs: ['Uber / 99', 'Combustível', 'Estacionamento', 'Transporte Público'] },
+            'Moradia': { icon: '🏠', color: '#84cc16', subs: ['Aluguel', 'Água / Luz', 'Internet', 'Manutenção'] },
+            'Lazer': { icon: '🍿', color: '#a855f7', subs: ['Cinema / Jogos', 'Viagem', 'Passeios', 'Streaming'] },
+            'Saúde': { icon: '💊', color: '#ec4899', subs: ['Farmácia', 'Médico', 'Academia'] },
+            'Salário': { icon: '💵', color: '#10b981', subs: ['Salário Fixo', 'Freelance', 'Investimentos'] }
+        };
 
-        function atualizarApp() {
-            localStorage.setItem('transacoes', JSON.stringify(transacoes));
-            
-            let ano = dataAtual.getFullYear();
-            let mes = dataAtual.getMonth();
-            let mesAnoStr = `${ano}-${String(mes + 1).padStart(2, '0')}`;
-            document.getElementById('current-month-label').innerText = dataAtual.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+        const DEFAULT_TEMPLATES = [
+            { name: 'Almoço', amount: 25.00, category: 'Alimentação', subcategory: 'Restaurante', type: 'despesa' },
+            { name: 'Uber', amount: 18.50, category: 'Transporte', subcategory: 'Uber / 99', type: 'despesa' },
+            { name: 'Café', amount: 6.00, category: 'Alimentação', subcategory: 'Padaria', type: 'despesa' },
+            { name: 'Mercado', amount: 150.00, category: 'Alimentação', subcategory: 'Mercado', type: 'despesa' }
+        ];
 
-            let filtradas = transacoes.filter(t => t.data.startsWith(mesAnoStr));
+        let appData = {
+            transactions: [],
+            wallets: ['Dinheiro', 'Cartão de Crédito', 'Pix', 'GPay / Carteira Virtual'],
+            budgetLimit: 2000.00,
+            savingGoal: 500.00,
+            streak: 5,
+            darkMode: false
+        };
 
-            let receitas = filtradas.filter(t => t.tipo === 'income').reduce((acc, t) => acc + t.valor, 0);
-            let despesas = filtradas.filter(t => t.tipo === 'expense').reduce((acc, t) => acc + t.valor, 0);
-            let saldo = receitas - despesas;
+        let currentTab = 'home';
+        let currentPeriod = new Date().toISOString().slice(0, 7);
+        let transactionTypeState = 'despesa';
+        let categoryChartInstance = null;
 
-            document.getElementById('total-balance').innerText = `R$ ${saldo.toFixed(2)}`;
-            document.getElementById('total-income').innerText = `R$ ${receitas.toFixed(2)}`;
-            document.getElementById('total-expense').innerText = `R$ ${despesas.toFixed(2)}`;
-
-            // Orçamento e Meta
-            let limiteOrcamento = 2000;
-            let metaEconomia = 500;
-            let percentualOrcamento = Math.min((despesas / limiteOrcamento) * 100, 100);
-            document.getElementById('budget-text').innerText = `Gastou R$ ${despesas.toFixed(2)} de R$ ${limiteOrcamento}`;
-            document.getElementById('budget-bar').style.width = `${percentualOrcamento}%`;
-            
-            let economiaReal = Math.max(0, receitas - despesas);
-            let percMeta = Math.min((economiaReal / metaEconomia) * 100, 100);
-            document.getElementById('meta-economia-text').innerText = `🎯 Meta de economia: R$ ${metaEconomia} (${percMeta.toFixed(0)}% alcançada)`;
-
-            // Maior gasto
-            let despesasFiltradas = filtradas.filter(t => t.tipo === 'expense');
-            if (despesasFiltradas.length > 0) {
-                let maior = despesasFiltradas.reduce((max, t) => t.valor > max.valor ? t : max, despesasFiltradas[0]);
-                document.getElementById('maior-gasto-box').innerHTML = `💸 <strong>Maior gasto:</strong> ${maior.descricao} (R$ ${maior.valor.toFixed(2)})`;
+        function loadData() {
+            const saved = localStorage.getItem('meu_bolso_app_data');
+            if (saved) {
+                try { appData = JSON.parse(saved); } catch(e) { console.error(e); }
             } else {
-                document.getElementById('maior-gasto-box').innerHTML = `💸 <strong>Maior gasto:</strong> Nenhum registrado este mês.`;
+                seedSampleData();
             }
-
-            // Comparativo
-            let mesPassadoDate = new Date(ano, mes - 1, 1);
-            let mesPassadoStr = `${mesPassadoDate.getFullYear()}-${String(mesPassadoDate.getMonth() + 1).padStart(2, '0')}`;
-            let despesasPassado = transacoes.filter(t => t.data.startsWith(mesPassadoStr) && t.tipo === 'expense').reduce((acc, t) => acc + t.valor, 0);
-            
-            if (despesasPassado > 0) {
-                let diff = ((despesas - despesasPassado) / despesasPassado) * 100;
-                let sinal = diff >= 0 ? '+' : '';
-                document.getElementById('comparativo-box').innerHTML = `📊 <strong>Comparativo:</strong> Você está gastando ${sinal}${diff.toFixed(1)}% vs mês passado.`;
-            } else {
-                document.getElementById('comparativo-box').innerHTML = `📊 <strong>Comparativo:</strong> Sem dados do mês anterior.`;
+            if (appData.darkMode) {
+                document.documentElement.classList.add('dark');
             }
+        }
 
-            atualizarStreak();
+        function saveData() {
+            localStorage.setItem('meu_bolso_app_data', JSON.stringify(appData));
+            updateStreak();
+        }
 
-            // Lista
-            let listaEl = document.getElementById('transaction-list');
-            listaEl.innerHTML = '';
-            if (filtradas.length === 0) {
-                listaEl.innerHTML = `<p style="color: var(--text-muted); text-align: center; padding: 15px;">Nenhuma transação neste mês.</p>`;
-            } else {
-                [...filtradas].reverse().forEach(t => {
-                    let li = document.createElement('li');
-                    li.className = 'transaction-item';
-                    li.innerHTML = `<div><strong>${t.descricao}</strong><br><small style="color:var(--text-muted);">${t.categoria} • ${t.conta || 'GPay'} • ${t.data}</small></div><span class="${t.tipo === 'income' ? 'income' : 'expense'}">${t.tipo === 'income' ? '+' : '-'} R$ ${t.valor.toFixed(2)}</span>`;
-                    listaEl.appendChild(li);
+        function seedSampleData() {
+            const yyyyMm = new Date().toISOString().slice(0, 7);
+            const todayStr = new Date().toISOString().slice(0, 10);
+            appData.transactions = [
+                { id: '1', description: 'Salário Mensal', amount: 4500.00, type: 'receita', category: 'Salário', subcategory: 'Salário Fixo', wallet: 'Pix', date: yyyyMm + '-01', tag: 'trabalho', recurring: true },
+                { id: '2', description: 'Supermercado', amount: 420.00, type: 'despesa', category: 'Alimentação', subcategory: 'Mercado', wallet: 'Cartão de Crédito', date: yyyyMm + '-05', tag: 'casa', recurring: false },
+                { id: '3', description: 'Almoço', amount: 35.00, type: 'despesa', category: 'Alimentação', subcategory: 'Restaurante', wallet: 'Dinheiro', date: todayStr, tag: 'trabalho', recurring: false }
+            ];
+            saveData();
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            renderCategoriesDropdown();
+            renderTemplates();
+            renderWalletsDropdown();
+            switchTab('home');
+            lucide.createIcons();
+        });
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                if(btn.dataset.tab === tab) {
+                    btn.classList.add('text-indigo-600', 'dark:text-indigo-400');
+                    btn.classList.remove('text-slate-400');
+                } else {
+                    btn.classList.remove('text-indigo-600', 'dark:text-indigo-400');
+                    btn.classList.add('text-slate-400');
+                }
+            });
+            const main = document.getElementById('main-content');
+            main.innerHTML = '';
+            if (tab === 'home') renderHomeView(main);
+            else if (tab === 'transactions') renderTransactionsView(main);
+            else if (tab === 'analytics') renderAnalyticsView(main);
+            else if (tab === 'wallets') renderWalletsView(main);
+            lucide.createIcons();
+        }
+
+        function getPeriodTransactions(period = currentPeriod) {
+            return appData.transactions.filter(t => t.date && t.date.startsWith(period));
+        }
+
+        function calculateSummary(period = currentPeriod) {
+            const txs = getPeriodTransactions(period);
+            let income = 0, expense = 0, todayExpense = 0;
+            const todayStr = new Date().toISOString().slice(0, 10);
+            txs.forEach(t => {
+                const amt = parseFloat(t.amount) || 0;
+                if (t.type === 'receita') income += amt;
+                else {
+                    expense += amt;
+                    if (t.date === todayStr) todayExpense += amt;
+                }
+            });
+            return { income, expense, balance: income - expense, todayExpense, txs };
+        }
+
+        function getPreviousPeriod(period) {
+            let [year, month] = period.split('-').map(Number);
+            month -= 1;
+            if (month === 0) { month = 12; year -= 1; }
+            return `${year}-${String(month).padStart(2, '0')}`;
+        }
+
+        function formatCurrency(val) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+        }
+
+        function renderHomeView(container) {
+            const summary = calculateSummary(currentPeriod);
+            const prevSummary = calculateSummary(getPreviousPeriod(currentPeriod));
+            let diffPercent = prevSummary.expense > 0 ? Math.round(((summary.expense - prevSummary.expense) / prevSummary.expense) * 100) : 0;
+
+            let largestExpense = null;
+            summary.txs.filter(t => t.type === 'despesa').forEach(t => {
+                if (!largestExpense || t.amount > largestExpense.amount) largestExpense = t;
+            });
+
+            const budget = appData.budgetLimit || 2000;
+            const budgetPercent = Math.min(Math.round((summary.expense / budget) * 100), 100);
+            const savingGoal = appData.savingGoal || 500;
+            const currentSavings = summary.balance > 0 ? summary.balance : 0;
+            const savingPercent = Math.min(Math.round((currentSavings / savingGoal) * 100), 100);
+
+            container.innerHTML = `
+                <div class="p-5 space-y-5 animate-in fade-in duration-300">
+                    <div class="flex items-center justify-between bg-slate-100 dark:bg-slate-800/60 p-1.5 rounded-2xl">
+                        <button onclick="changePeriod(-1)" class="p-2 rounded-xl bg-white dark:bg-slate-800 text-slate-600 shadow-sm"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                        <span class="font-bold text-sm tracking-wide capitalize">${formatPeriodName(currentPeriod)}</span>
+                        <button onclick="changePeriod(1)" class="p-2 rounded-xl bg-white dark:bg-slate-800 text-slate-600 shadow-sm"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                    </div>
+
+                    <!-- Automação: Botões Extrato CSV e GPay -->
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="openImportCsvModal()" class="py-2.5 px-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-2xl text-xs font-semibold flex items-center justify-center gap-1.5 transition">
+                            <i data-lucide="file-spreadsheet" class="w-4 h-4 text-indigo-500"></i> Importar CSV
+                        </button>
+                        <button onclick="openImportGpayModal()" class="py-2.5 px-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-2xl text-xs font-semibold flex items-center justify-center gap-1.5 transition">
+                            <i data-lucide="bell" class="w-4 h-4 text-amber-500"></i> Colar GPay / SMS
+                        </button>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-indigo-600 to-violet-700 text-white p-6 rounded-3xl shadow-xl shadow-indigo-500/20 relative overflow-hidden">
+                        <p class="text-xs font-medium uppercase tracking-wider text-indigo-100 opacity-90">Saldo Atual do Mês</p>
+                        <h2 class="text-3xl font-extrabold tracking-tight mt-1 mb-4">${formatCurrency(summary.balance)}</h2>
+                        <div class="grid grid-cols-2 gap-4 pt-4 border-t border-white/15 text-xs">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-7 h-7 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center font-bold">↓</div>
+                                <div><span class="opacity-75 block">Receitas</span><span class="font-bold text-sm">${formatCurrency(summary.income)}</span></div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <div class="w-7 h-7 rounded-xl bg-rose-500/20 text-rose-300 flex items-center justify-center font-bold">↑</div>
+                                <div><span class="opacity-75 block">Despesas</span><span class="font-bold text-sm">${formatCurrency(summary.expense)}</span></div>
+                            </div>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-white/15 flex items-center justify-between text-xs">
+                            <span class="opacity-80">Gasto do Dia:</span>
+                            <span class="font-bold text-sm bg-white/10 px-2.5 py-1 rounded-xl">${formatCurrency(summary.todayExpense)}</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div class="bg-white dark:bg-slate-800/85 border border-slate-100 dark:border-slate-800 p-4 rounded-2xl shadow-sm">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs font-bold text-slate-500 uppercase">Orçamento Mensal</span>
+                                <span class="text-xs font-bold ${summary.expense > budget ? 'text-rose-500' : 'text-indigo-600'}">${formatCurrency(summary.expense)} / ${formatCurrency(budget)}</span>
+                            </div>
+                            <div class="w-full bg-slate-100 dark:bg-slate-700 h-2.5 rounded-full overflow-hidden">
+                                <div class="bg-indigo-600 h-full rounded-full ${summary.expense > budget ? 'bg-rose-500' : ''}" style="width: ${budgetPercent}%"></div>
+                            </div>
+                            <p class="text-[11px] text-slate-400 mt-2 flex justify-between">
+                                <span>Gastando <strong>${diffPercent >= 0 ? '+' + diffPercent + '%' : diffPercent + '%'}</strong> vs mês passado</span>
+                                <span>${budgetPercent}%</span>
+                            </p>
+                        </div>
+
+                        <div class="bg-white dark:bg-slate-800/85 border border-slate-100 dark:border-slate-800 p-4 rounded-2xl shadow-sm">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-xs font-bold text-slate-500 uppercase">Meta de Economia</span>
+                                <span class="text-xs font-bold text-emerald-600">${savingPercent}% alcançado</span>
+                            </div>
+                            <div class="w-full bg-slate-100 dark:bg-slate-700 h-2.5 rounded-full overflow-hidden">
+                                <div class="bg-emerald-500 h-full rounded-full" style="width: ${savingPercent}%"></div>
+                            </div>
+                            <p class="text-[11px] text-slate-400 mt-2">Meta de guardar <strong>${formatCurrency(savingGoal)}</strong> este mês.</p>
+                        </div>
+
+                        ${largestExpense ? `
+                        <div class="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 p-4 rounded-2xl flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-500 flex items-center justify-center text-lg">💸</div>
+                                <div>
+                                    <span class="text-[10px] font-bold uppercase text-amber-500 block">Maior Gasto do Mês</span>
+                                    <h4 class="font-bold text-sm">${largestExpense.description} (${largestExpense.category})</h4>
+                                </div>
+                            </div>
+                            <span class="font-extrabold text-rose-500">${formatCurrency(largestExpense.amount)}</span>
+                        </div>` : ''}
+                    </div>
+
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200">Transações Recentes</h3>
+                            <button onclick="switchTab('transactions')" class="text-xs font-semibold text-indigo-600 dark:text-indigo-400">Ver todas</button>
+                        </div>
+                        <div id="recent-transactions-list" class="space-y-2.5"></div>
+                    </div>
+                </div>
+            `;
+            renderRecentTransactionsList();
+        }
+
+        function renderRecentTransactionsList() {
+            const container = document.getElementById('recent-transactions-list');
+            if(!container) return;
+            const txs = getPeriodTransactions(currentPeriod).slice(-5).reverse();
+            if (txs.length === 0) {
+                container.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs bg-slate-50 dark:bg-slate-800/40 rounded-2xl">Nenhuma transação neste período.</div>`;
+                return;
+            }
+            container.innerHTML = txs.map(t => {
+                const catInfo = DEFAULT_CATEGORIES[t.category] || { icon: '📦', color: '#64748b' };
+                const isIncome = t.type === 'receita';
+                return `
+                    <div class="bg-white dark:bg-slate-800/85 border border-slate-100 dark:border-slate-800 p-3 rounded-2xl flex items-center justify-between shadow-sm">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-2xl flex items-center justify-center text-lg" style="background-color: ${catInfo.color}20">${catInfo.icon}</div>
+                            <div>
+                                <h4 class="font-bold text-sm leading-tight">${t.description}</h4>
+                                <p class="text-[11px] text-slate-400 mt-0.5">${t.category} • <span class="bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded">${t.wallet}</span></p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="font-extrabold text-sm ${isIncome ? 'text-emerald-500' : 'text-rose-500'}">${isIncome ? '+' : '-'}${formatCurrency(t.amount)}</span>
+                            <p class="text-[10px] text-slate-400">${formatDate(t.date)}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function changePeriod(direction) {
+            let [year, month] = currentPeriod.split('-').map(Number);
+            month += direction;
+            if (month > 12) { month = 1; year += 1; }
+            if (month < 1) { month = 12; year -= 1; }
+            currentPeriod = `${year}-${String(month).padStart(2, '0')}`;
+            switchTab(currentTab);
+        }
+
+        function formatPeriodName(periodStr) {
+            const [year, month] = periodStr.split('-');
+            return new Date(year, month - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+        }
+
+        function formatDate(dateStr) {
+            if(!dateStr) return '';
+            const parts = dateStr.split('-');
+            return `${parts[2]}/${parts[1]}`;
+        }
+
+        function renderTransactionsView(container) {
+            const txs = getPeriodTransactions(currentPeriod).reverse();
+            container.innerHTML = `
+                <div class="p-5 space-y-4 animate-in fade-in duration-300">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                            <button onclick="changePeriod(-1)" class="p-1.5"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                            <span class="font-bold text-xs capitalize">${formatPeriodName(currentPeriod)}</span>
+                            <button onclick="changePeriod(1)" class="p-1.5"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                        </div>
+                        <input type="text" id="tx-search" oninput="filterTransactionsList()" placeholder="Buscar..." class="bg-slate-100 dark:bg-slate-800 border-none text-xs rounded-xl py-2 px-3 w-36">
+                    </div>
+                    <div id="full-transactions-list" class="space-y-2.5"></div>
+                </div>
+            `;
+            renderFullTransactionsList(txs);
+        }
+
+        function renderFullTransactionsList(txs) {
+            const container = document.getElementById('full-transactions-list');
+            if(!container) return;
+            if (txs.length === 0) {
+                container.innerHTML = `<div class="text-center py-12 text-slate-400 text-xs">Nenhuma transação encontrada.</div>`;
+                return;
+            }
+            container.innerHTML = txs.map(t => {
+                const catInfo = DEFAULT_CATEGORIES[t.category] || { icon: '📦', color: '#64748b' };
+                const isIncome = t.type === 'receita';
+                return `
+                    <div class="bg-white dark:bg-slate-800/85 border border-slate-100 dark:border-slate-800 p-3 rounded-2xl flex items-center justify-between shadow-sm">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-2xl flex items-center justify-center text-lg" style="background-color: ${catInfo.color}20">${catInfo.icon}</div>
+                            <div>
+                                <h4 class="font-bold text-sm">${t.description}</h4>
+                                <p class="text-[11px] text-slate-400">${t.category} • <span class="bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded">${t.wallet}</span></p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <div class="text-right">
+                                <span class="font-extrabold text-sm ${isIncome ? 'text-emerald-500' : 'text-rose-500'}">${isIncome ? '+' : '-'}${formatCurrency(t.amount)}</span>
+                                <p class="text-[10px] text-slate-400">${formatDate(t.date)}</p>
+                            </div>
+                            <button onclick="deleteTransaction('${t.id}')" class="p-1.5 text-slate-400 hover:text-rose-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function filterTransactionsList() {
+            const query = document.getElementById('tx-search').value.toLowerCase();
+            const txs = getPeriodTransactions(currentPeriod).filter(t => t.description.toLowerCase().includes(query) || t.category.toLowerCase().includes(query)).reverse();
+            renderFullTransactionsList(txs);
+        }
+
+        function deleteTransaction(id) {
+            if(confirm('Deseja excluir esta transação?')) {
+                appData.transactions = appData.transactions.filter(t => t.id !== id);
+                saveData();
+                showToast('Transação excluída');
+                switchTab(currentTab);
+            }
+        }
+
+        function renderAnalyticsView(container) {
+            const summary = calculateSummary(currentPeriod);
+            const catTotals = {};
+            summary.txs.filter(t => t.type === 'despesa').forEach(t => {
+                catTotals[t.category] = (catTotals[t.category] || 0) + parseFloat(t.amount);
+            });
+            const labels = Object.keys(catTotals);
+            const dataVals = Object.values(catTotals);
+            const bgColors = labels.map(l => DEFAULT_CATEGORIES[l]?.color || '#94a3b8');
+
+            container.innerHTML = `
+                <div class="p-5 space-y-5 animate-in fade-in duration-300">
+                    <div class="flex items-center justify-between bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl">
+                        <button onclick="changePeriod(-1)" class="p-2 rounded-xl bg-white dark:bg-slate-700 shadow-sm"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                        <span class="font-bold text-sm capitalize">${formatPeriodName(currentPeriod)}</span>
+                        <button onclick="changePeriod(1)" class="p-2 rounded-xl bg-white dark:bg-slate-700 shadow-sm"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800/85 border border-slate-100 dark:border-slate-800 p-5 rounded-3xl shadow-sm">
+                        <h3 class="font-bold text-sm mb-4 text-slate-700 dark:text-slate-200">Gastos por Categoria</h3>
+                        <div class="relative w-full h-64 flex items-center justify-center">
+                            ${dataVals.length > 0 ? '<canvas id="categoryChart"></canvas>' : '<p class="text-xs text-slate-400">Sem despesas registradas.</p>'}
+                        </div>
+                    </div>
+                </div>
+            `;
+            if (dataVals.length > 0) {
+                const ctx = document.getElementById('categoryChart').getContext('2d');
+                if (categoryChartInstance) categoryChartInstance.destroy();
+                categoryChartInstance = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: { labels, datasets: [{ data: dataVals, backgroundColor: bgColors, borderWidth: 0 }] },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } } }
                 });
             }
-
-            atualizarGraficoPizza(filtradas);
         }
 
-        function atualizarStreak() {
-            let diasUnicos = [...new Set(transacoes.map(t => t.data))].sort();
-            let streak = 0;
-            let hojeStr = new Date().toISOString().split('T')[0];
-            
-            if (diasUnicos.includes(hojeStr)) {
-                streak = 1;
-                let d = new Date();
-                for (let i = 1; i <= 30; i++) {
-                    d.setDate(d.getDate() - 1);
-                    let dStr = d.toISOString().split('T')[0];
-                    if (diasUnicos.includes(dStr)) streak++;
-                    else break;
-                }
-            }
-            document.getElementById('streak-badge').innerText = `🔥 ${streak} ${streak === 1 ? 'dia seg.' : 'dias seg.'}`;
-        }
-
-        function atualizarGraficoPizza(filtradas) {
-            let ctx = document.getElementById('categoryChart').getContext('2d');
-            let categoriasTotais = {};
-
-            filtradas.filter(t => t.tipo === 'expense').forEach(t => {
-                categoriasTotais[t.categoria] = (categoriasTotais[t.categoria] || 0) + t.valor;
+        function renderWalletsView(container) {
+            const wallets = appData.wallets || [];
+            const walletTotals = {};
+            wallets.forEach(w => walletTotals[w] = 0);
+            appData.transactions.forEach(t => {
+                const amt = parseFloat(t.amount) || 0;
+                if (!walletTotals[t.wallet]) walletTotals[t.wallet] = 0;
+                if (t.type === 'receita') walletTotals[t.wallet] += amt;
+                else walletTotals[t.wallet] -= amt;
             });
 
-            let labels = Object.keys(categoriasTotais);
-            let valores = Object.values(categoriasTotais);
+            container.innerHTML = `
+                <div class="p-5 space-y-4 animate-in fade-in duration-300">
+                    <h3 class="font-bold text-sm text-slate-700 dark:text-slate-200">Suas Contas e Carteiras</h3>
+                    <div class="space-y-3">
+                        ${wallets.map(w => `
+                            <div class="bg-white dark:bg-slate-800/85 border border-slate-100 dark:border-slate-800 p-4 rounded-2xl flex items-center justify-between shadow-sm">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 rounded-2xl bg-indigo-50 dark:bg-indigo-950/50 text-indigo-500 flex items-center justify-center font-bold">💳</div>
+                                    <div><h4 class="font-bold text-sm">${w}</h4><p class="text-[11px] text-slate-400">Saldo acumulado</p></div>
+                                </div>
+                                <span class="font-extrabold text-base ${walletTotals[w] >= 0 ? 'text-emerald-500' : 'text-rose-500'}">${formatCurrency(walletTotals[w])}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
 
-            if (chartInstance) chartInstance.destroy();
-
-            if (labels.length === 0) {
-                labels = ['Sem gastos'];
-                valores = [1];
+        function openTransactionModal(template = null) {
+            document.getElementById('tx-amount').value = template ? template.amount : '';
+            document.getElementById('tx-description').value = template ? template.name : '';
+            document.getElementById('tx-tag').value = '';
+            document.getElementById('tx-recurring').checked = false;
+            document.getElementById('tx-date').value = new Date().toISOString().slice(0, 10);
+            if (template) {
+                setTransactionType(template.type);
+                document.getElementById('tx-category').value = template.category;
+                updateSubcategories();
+                document.getElementById('tx-subcategory').value = template.subcategory;
+            } else {
+                setTransactionType('despesa');
             }
-
-            chartInstance = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        data: valores,
-                        backgroundColor: ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom', labels: { color: '#f8fafc', boxWidth: 12, font: { size: 11 } } } }
-                }
-            });
+            document.getElementById('transaction-modal').classList.remove('hidden');
         }
 
-        function mudarMes(direcao) {
-            dataAtual.setMonth(dataAtual.getMonth() + direcao);
-            atualizarApp();
+        function closeTransactionModal() { document.getElementById('transaction-modal').classList.add('hidden'); }
+
+        function setTransactionType(type) {
+            transactionTypeState = type;
+            const expBtn = document.getElementById('type-expense');
+            const incBtn = document.getElementById('type-income');
+            if (type === 'despesa') {
+                expBtn.className = 'py-2.5 rounded-xl font-semibold text-sm transition shadow-sm bg-white dark:bg-slate-700 text-rose-500';
+                incBtn.className = 'py-2.5 rounded-xl font-semibold text-sm transition text-slate-400';
+            } else {
+                incBtn.className = 'py-2.5 rounded-xl font-semibold text-sm transition shadow-sm bg-white dark:bg-slate-700 text-emerald-500';
+                expBtn.className = 'py-2.5 rounded-xl font-semibold text-sm transition text-slate-400';
+            }
         }
 
-        function abrirModalTransacao() { document.getElementById('modal-transacao').style.display = 'flex'; }
-        function abrirModalExtrato() { document.getElementById('modal-extrato').style.display = 'flex'; }
-        function abrirModalNotificacao() { document.getElementById('modal-notificacao').style.display = 'flex'; }
-        function fecharModais() { document.querySelectorAll('.modal').forEach(m => m.style.display = 'none'); }
+        function renderCategoriesDropdown() {
+            document.getElementById('tx-category').innerHTML = Object.keys(DEFAULT_CATEGORIES).map(cat => `<option value="${cat}">${DEFAULT_CATEGORIES[cat].icon} ${cat}</option>`).join('');
+            updateSubcategories();
+        }
 
-        function salvarTransacao() {
-            let tipo = document.getElementById('tipo-transacao').value;
-            let conta = document.getElementById('conta-transacao').value;
-            let descricao = document.getElementById('desc-transacao').value;
-            let valor = parseFloat(document.getElementById('valor-transacao').value);
-            let categoria = document.getElementById('cat-transacao').value;
+        function updateSubcategories() {
+            const cat = document.getElementById('tx-category').value;
+            const subs = DEFAULT_CATEGORIES[cat]?.subs || [];
+            document.getElementById('tx-subcategory').innerHTML = subs.map(sub => `<option value="${sub}">${sub}</option>`).join('');
+        }
 
-            if (!descricao || isNaN(valor)) {
-                alert('Preencha a descrição e o valor corretamente!');
+        function renderWalletsDropdown() {
+            document.getElementById('tx-wallet').innerHTML = (appData.wallets || []).map(w => `<option value="${w}">${w}</option>`).join('');
+        }
+
+        function renderTemplates() {
+            document.getElementById('quick-templates-list').innerHTML = DEFAULT_TEMPLATES.map(t => `
+                <button type="button" onclick='openTransactionModal(${JSON.stringify(t)})' class="flex items-center space-x-1.5 bg-slate-100 dark:bg-slate-800 px-3 py-2 rounded-2xl text-xs font-semibold whitespace-nowrap">
+                    <span>${DEFAULT_CATEGORIES[t.category]?.icon || '📌'}</span><span>${t.name}</span>
+                </button>
+            `).join('');
+        }
+
+        function saveTransaction() {
+            const amount = parseFloat(document.getElementById('tx-amount').value);
+            const description = document.getElementById('tx-description').value.trim();
+            if (!amount || isNaN(amount) || amount <=0 || !description) {
+                showToast('Preencha o valor e a descrição.');
                 return;
             }
-
-            let hoje = new Date().toISOString().split('T')[0];
-            transacoes.push({ id: Date.now(), tipo, conta, descricao, valor, categoria, data: hoje });
-            
-            fecharModais();
-            document.getElementById('desc-transacao').value = '';
-            document.getElementById('valor-transacao').value = '';
-            atualizarApp();
+            appData.transactions.push({
+                id: 'tx_' + Date.now(),
+                amount, description,
+                type: transactionTypeState,
+                category: document.getElementById('tx-category').value,
+                subcategory: document.getElementById('tx-subcategory').value,
+                wallet: document.getElementById('tx-wallet').value,
+                date: document.getElementById('tx-date').value || new Date().toISOString().slice(0, 10),
+                tag: document.getElementById('tx-tag').value.trim(),
+                recurring: document.getElementById('tx-recurring').checked
+            });
+            saveData();
+            closeTransactionModal();
+            showToast('Transação salva! 🎉');
+            switchTab(currentTab);
         }
 
-        function usarTemplate(desc, valor, cat) {
-            let hoje = new Date().toISOString().split('T')[0];
-            transacoes.push({ id: Date.now(), tipo: 'expense', conta: 'GPay / Virtual', descricao: desc, valor: valor, categoria: cat, data: hoje });
-            atualizarApp();
-        }
+        // Funções dos novos botões de Automação (CSV e GPay)
+        function openImportCsvModal() { document.getElementById('import-csv-modal').classList.remove('hidden'); }
+        function closeImportCsvModal() { document.getElementById('import-csv-modal').classList.add('hidden'); }
 
-        function interpretarSMS() {
-            let texto = document.getElementById('sms-text').value;
-            if (!texto) return alert('Cole o texto da notificação do GPay.');
+        function openImportGpayModal() { document.getElementById('import-gpay-modal').classList.remove('hidden'); }
+        function closeImportGpayModal() { document.getElementById('import-gpay-modal').classList.add('hidden'); }
 
-            let matchValor = texto.match(/R?\$?\s*([0-9]+[.,][0-9]{2})/);
+        function interpretarGPaySMS() {
+            const texto = document.getElementById('gpay-text-input').value;
+            if (!texto) return showToast('Cole o texto da notificação.');
+            const matchValor = texto.match(/R?\$?\s*([0-9]+[.,][0-9]{2})/);
             if (!matchValor) {
-                alert('Não foi possível identificar o valor monetário no texto.');
+                showToast('Não foi possível identificar o valor no texto.');
                 return;
             }
-
-            let valor = parseFloat(matchValor[1].replace('.', '').replace(',', '.'));
-            let hoje = new Date().toISOString().split('T')[0];
-
-            transacoes.push({
-                id: Date.now(),
-                tipo: 'expense',
-                conta: 'GPay / Virtual',
-                descricao: 'Gasto via GPay',
-                valor: valor,
-                categoria: '🛍️ Compras',
-                data: hoje
+            const valor = parseFloat(matchValor[1].replace('.', '').replace(',', '.'));
+            appData.transactions.push({
+                id: 'tx_' + Date.now(),
+                amount: valor,
+                description: 'Gasto GPay / Notificação',
+                type: 'despesa',
+                category: 'Alimentação',
+                subcategory: 'Restaurante',
+                wallet: 'GPay / Carteira Virtual',
+                date: new Date().toISOString().slice(0, 10),
+                tag: 'gpay',
+                recurring: false
             });
-
-            fecharModais();
-            document.getElementById('sms-text').value = '';
-            atualizarApp();
-            alert(`Gasto de R$ ${valor.toFixed(2)} importado com sucesso!`);
+            saveData();
+            closeImportGpayModal();
+            document.getElementById('gpay-text-input').value = '';
+            showToast(`Gasto de R$ ${valor.toFixed(2)} importado do GPay! 🚀`);
+            switchTab(currentTab);
         }
 
         function processarCSV() {
-            let fileInput = document.getElementById('file-input');
-            if (fileInput.files.length === 0) return alert('Selecione um arquivo CSV.');
-
-            let file = fileInput.files[0];
-            let reader = new FileReader();
+            const fileInput = document.getElementById('file-csv-input');
+            if (fileInput.files.length === 0) return showToast('Selecione um arquivo CSV.');
+            const file = fileInput.files[0];
+            const reader = new FileReader();
             reader.onload = function(e) {
-                let linhas = e.target.result.split('\n');
+                const linhas = e.target.result.split('\n');
                 let count = 0;
-                let hoje = new Date().toISOString().split('T')[0];
-
+                const hoje = new Date().toISOString().slice(0, 10);
                 linhas.forEach(linha => {
-                    let partes = linha.split(/[,;]/);
+                    const partes = linha.split(/[,;]/);
                     if (partes.length >= 2) {
-                        let desc = partes[0].replace(/"/g, '').trim();
-                        let valStr = partes[1].replace(/"/g, '').replace('R$', '').trim().replace(',', '.');
-                        let val = parseFloat(valStr);
-
+                        const desc = partes[0].replace(/"/g, '').trim();
+                        const valStr = partes[1].replace(/"/g, '').replace('R$', '').trim().replace(',', '.');
+                        const val = parseFloat(valStr);
                         if (!isNaN(val) && val !== 0 && desc.length > 1) {
-                            transacoes.push({
-                                id: Date.now() + Math.random(),
-                                tipo: val < 0 ? 'expense' : 'income',
-                                conta: 'Conta Bancária',
-                                descricao: desc,
-                                valor: Math.abs(val),
-                                categoria: '📄 Extrato Bancário',
-                                data: hoje
+                            appData.transactions.push({
+                                id: 'tx_' + Date.now() + Math.random(),
+                                amount: Math.abs(val),
+                                description: desc,
+                                type: val < 0 ? 'despesa' : 'receita',
+                                category: 'Alimentação',
+                                subcategory: 'Mercado',
+                                wallet: 'Conta Bancária',
+                                date: hoje,
+                                tag: 'extrato',
+                                recurring: false
                             });
                             count++;
                         }
                     }
                 });
-
-                fecharModais();
-                atualizarApp();
-                alert(`${count} transações importadas com sucesso!`);
+                saveData();
+                closeImportCsvModal();
+                showToast(`${count} transações importadas com sucesso!`);
+                switchTab(currentTab);
             };
             reader.readAsText(file);
         }
 
-        atualizarApp();
+        function updateStreak() {
+            const streakEl = document.getElementById('streak-indicator');
+            if(streakEl) streakEl.innerText = `🔥 ${appData.streak || 1} dias`;
+        }
+
+        function openSettingsModal() {
+            document.getElementById('setting-budget').value = appData.budgetLimit || 2000;
+            document.getElementById('setting-saving-goal').value = appData.savingGoal || 500;
+            renderSettingsWallets();
+            document.getElementById('settings-modal').classList.remove('hidden');
+        }
+        function closeSettingsModal() { document.getElementById('settings-modal').classList.add('hidden'); }
+
+        function renderSettingsWallets() {
+            document.getElementById('settings-wallets-list').innerHTML = (appData.wallets || []).map(w => `
+                <div class="flex items-center justify-between bg-slate-50 dark:bg-slate-800 px-3 py-2 rounded-xl text-xs">
+                    <span>💳 ${w}</span>
+                    <button onclick="removeWallet('${w}')" class="text-rose-500 font-bold">✕</button>
+                </div>
+            `).join('');
+        }
+
+        function addNewWallet() {
+            const input = document.getElementById('new-wallet-name');
+            const name = input.value.trim();
+            if (name && !appData.wallets.includes(name)) {
+                appData.wallets.push(name);
+                input.value = '';
+                renderSettingsWallets();
+                renderWalletsDropdown();
+                saveData();
+                showToast('Conta adicionada');
+            }
+        }
+
+        function removeWallet(name) {
+            if (appData.wallets.length <= 1) return showToast('Mantenha ao menos uma conta.');
+            appData.wallets = appData.wallets.filter(w => w !== name);
+            renderSettingsWallets();
+            renderWalletsDropdown();
+            saveData();
+        }
+
+        function saveSettings() {
+            appData.budgetLimit = parseFloat(document.getElementById('setting-budget').value) || 2000;
+            appData.savingGoal = parseFloat(document.getElementById('setting-saving-goal').value) || 500;
+            saveData();
+            closeSettingsModal();
+            showToast('Configurações salvas!');
+            switchTab(currentTab);
+        }
+
+        function toggleDarkMode() {
+            appData.darkMode = !appData.darkMode;
+            document.documentElement.classList.toggle('dark', appData.darkMode);
+            saveData();
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.classList.remove('opacity-0', 'translate-y-[-20px]');
+            toast.classList.add('opacity-100', 'translate-y-0');
+            setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'translate-y-[-20px]');
+            }, 3000);
+        }
+
+        function exportData() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData, null, 2));
+            const dlAnchor = document.createElement('a');
+            dlAnchor.setAttribute("href", dataStr);
+            dlAnchor.setAttribute("download", "meu_bolso_backup.json");
+            document.body.appendChild(dlAnchor);
+            dlAnchor.click();
+            dlAnchor.remove();
+        }
+
+        function resetData() {
+            if (confirm('Deseja apagar todos os dados e reiniciar?')) {
+                localStorage.removeItem('meu_bolso_app_data');
+                location.reload();
+            }
+        }
     </script>
 </body>
 </html>
